@@ -1,52 +1,91 @@
-# Prerequisites
-*.d
+# ──────────────────────────────────────────────
+#  DataSanitization / EraseCure — .gitignore
+# ──────────────────────────────────────────────
 
-# Object files
+# ── CMake & Build outputs ─────────────────────
+build/
+**/build/
+build-*/
+**/build-*/
+cmake-build-*/
+**/cmake-build-*/
+CMakeFiles/
+**/CMakeFiles/
+CMakeCache.txt
+**/CMakeCache.txt
+cmake_install.cmake
+**/cmake_install.cmake
+CTestTestfile.cmake
+**/CTestTestfile.cmake
+install_manifest.txt
+**/install_manifest.txt
+compile_commands.json
+**/compile_commands.json
+.clangd/
+.cache/
+
+# ── Compiled binaries & libraries ─────────────
 *.o
 *.ko
 *.obj
 *.elf
-
-# Linker output
 *.ilk
 *.map
 *.exp
-
-# Precompiled Headers
 *.gch
 *.pch
-
-# Libraries
 *.lib
 *.a
 *.la
 *.lo
-
-# Shared objects (inc. Windows DLLs)
 *.dll
 *.so
 *.so.*
 *.dylib
-
-# Executables
 *.exe
 *.out
 *.app
-*.i*86
-*.x86_64
-*.hex
+bin/
+**/bin/
+lib/
+**/lib/
 
-# Debug files
+# ── Runtime test images (NEVER commit raw disks) ─
+*.img
+*.image
+*.iso
+*.vmdk
+test_*.img
+test.img
+
+# ── Runtime logs, reports & databases ─────────
+data/logs/*.jsonl
+data/logs/*.log
+**/data/logs/*.jsonl
+**/data/logs/*.log
+data/reports/*
+**/data/reports/*
+*.db
+*.db-shm
+*.db-wal
+data/erasecure_audit.db
+
+# ── IDE & Editor files ─────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Debug / Profiling ──────────────────────────
 *.dSYM/
 *.su
 *.idb
 *.pdb
-
-# Kernel Module Compile Results
-*.mod*
-*.cmd
-.tmp_versions/
-modules.order
-Module.symvers
-Mkfile.old
-dkms.conf
+default.profraw
+*.profdata
+callgrind.out.*
+massif.out.*

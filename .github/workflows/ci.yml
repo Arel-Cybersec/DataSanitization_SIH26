@@ -1,0 +1,53 @@
+name: CI — Build & Test
+
+on:
+  push:
+    branches: [ "main", "master", "develop" ]
+  pull_request:
+    branches: [ "main", "master", "develop" ]
+
+jobs:
+  build-and-test:
+    name: Build (${{ matrix.build_type }}) on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-24.04]
+        build_type: [Debug, Release]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            libssl-dev \
+            libsqlite3-dev \
+            pkg-config
+
+      - name: Configure CMake
+        working-directory: secure_eraser
+        run: |
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -DCMAKE_C_COMPILER=gcc
+
+      - name: Build
+        working-directory: secure_eraser
+        run: cmake --build build --parallel $(nproc)
+
+      - name: Run tests
+        working-directory: secure_eraser/build
+        run: ctest --output-on-failure --timeout 60
+
+      - name: Verify CLI binary
+        working-directory: secure_eraser
+        run: |
+          ls -lh build/bin/erasecure
+          ./build/bin/erasecure --help
