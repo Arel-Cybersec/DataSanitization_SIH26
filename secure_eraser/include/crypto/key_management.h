@@ -24,12 +24,20 @@ typedef enum {
     KEY_MGMT_NOT_IMPLEMENTED       = 3,
 } KeyMgmtCapability;
 
+/* ─── Encrypted volume type ──────────────────────────────────── */
+typedef enum {
+    ENCRYPTED_VOL_NONE             = 0,
+    ENCRYPTED_VOL_SED_HARDWARE     = 1,   /* Opal / ATA / NVMe SED */
+    ENCRYPTED_VOL_LUKS1            = 2,   /* Linux LUKS1 header */
+    ENCRYPTED_VOL_LUKS2            = 3,   /* Linux LUKS2 header */
+    ENCRYPTED_VOL_UNKNOWN          = 4,
+} EncryptedVolumeType;
+
 /**
  * @brief Query whether a device exposes self-encryption / key-management.
  *
- * For SATA devices, this would check ATA IDENTIFY DEVICE word 82 bit 1
- * (Security feature set) and related words.  Currently returns
- * KEY_MGMT_NOT_IMPLEMENTED until proper ioctl support is added.
+ * Inspects device capabilities, ATA IDENTIFY, NVMe controller data,
+ * and block headers.
  *
  * @param device  Device to query.
  * @return        KeyMgmtCapability code.
@@ -37,8 +45,33 @@ typedef enum {
 KeyMgmtCapability key_mgmt_query_device(const StorageDevice *device);
 
 /**
+ * @brief Detect whether a block device or disk image contains a LUKS header.
+ *
+ * @param path      Path to device or image.
+ * @param vol_type  Output: detected volume type (LUKS1, LUKS2, or NONE).
+ * @return          ERASECURE_OK on success.
+ */
+ErasecureError key_mgmt_detect_luks(const char *path, EncryptedVolumeType *vol_type);
+
+/**
+ * @brief Securely zero out a buffer containing cryptographic key material.
+ *
+ * Uses OpenSSL's OPENSSL_cleanse() to ensure the compiler does not
+ * optimize away the memory scrub.
+ *
+ * @param ptr  Pointer to memory to clean.
+ * @param len  Number of bytes to zero.
+ */
+void key_mgmt_secure_cleanse(void *ptr, size_t len);
+
+/**
  * @brief Return a human-readable string for a KeyMgmtCapability.
  */
 const char *key_mgmt_capability_str(KeyMgmtCapability cap);
+
+/**
+ * @brief Return a human-readable string for an EncryptedVolumeType.
+ */
+const char *encrypted_volume_type_str(EncryptedVolumeType type);
 
 #endif /* ERASECURE_KEY_MANAGEMENT_H */

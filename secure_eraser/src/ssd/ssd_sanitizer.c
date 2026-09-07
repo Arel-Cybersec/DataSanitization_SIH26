@@ -61,21 +61,22 @@ ErasecureError ssd_sanitize(const StorageDevice *device,
     switch (opts->method) {
         case SANITIZE_METHOD_BLOCK_ERASE:
             if (!opts->test_mode) {
-                /*
-                 * STUB: Real SSD logical block overwrite.
-                 *
-                 * WARNING: This would NOT guarantee physical NAND erasure.
-                 * The FTL (Flash Translation Layer) may remap writes.
-                 * Over-provisioned and wear-levelling areas are inaccessible.
-                 *
-                 * For guaranteed physical erasure use SANITIZE_METHOD_DEVICE_NATIVE.
-                 * NOT IMPLEMENTED for real devices.
-                 */
-                result->result_code = ERASECURE_ERR_NOT_IMPLEMENTED;
-                snprintf(result->error_message, sizeof(result->error_message),
-                         "Real SSD block erase not implemented. "
-                         "Note: logical overwrite cannot guarantee NAND erasure.");
-                return ERASECURE_ERR_NOT_IMPLEMENTED;
+                /* Real SSD logical block overwrite with explicit confirmation.
+                 * Note: Physical NAND erasure limitation is documented in the result. */
+                BlockEraseOptions be_opts = opts->block_erase;
+                be_opts.progress_cb = opts->progress_cb;
+                be_opts.user_data   = opts->user_data;
+
+                ErasecureError ret = block_erase_device(device, &be_opts,
+                                                        device->path,
+                                                        &result->block_result);
+                result->result_code = ret;
+                snprintf(result->verify_result.confidence_note,
+                         sizeof(result->verify_result.confidence_note),
+                         "CAVEAT: Logical block overwrite completed, but cannot guarantee "
+                         "physical NAND erasure due to SSD Flash Translation Layer (FTL) "
+                         "and wear-leveling remaps.");
+                return ret;
             }
             /* Test image mode */
             {

@@ -66,4 +66,17 @@ CryptoEraseStatus crypto_erase_execute(const StorageDevice *device);
  */
 const char *crypto_erase_status_str(CryptoEraseStatus status);
 
+/**
+ * @brief Test cryptographic key destruction on an in-memory key buffer.
+ *
+ * Securely overwrites the key buffer using OPENSSL_cleanse, verifies that
+ * the memory is cleared, and returns CRYPTO_ERASE_SUCCESS.
+ * Used for unit testing cryptographic erase mechanisms with synthetic key material.
+ *
+ * @param key_buf  Pointer to synthetic key buffer to destroy.
+ * @param key_len  Length of key buffer in bytes.
+ * @return         CRYPTO_ERASE_SUCCESS on success, CRYPTO_ERASE_FAILED on invalid args.
+ */
+CryptoEraseStatus crypto_erase_synthetic_key(uint8_t *key_buf, size_t key_len);
+
 #endif /* ERASECURE_CRYPTO_ERASE_H */

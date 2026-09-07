@@ -60,6 +60,8 @@ endif()
 message(STATUS "OpenSSL: ${OPENSSL_VERSION}")
 message(STATUS "SQLite3: ${SQLITE3_LIBRARIES}")
 
+find_package(ZLIB QUIET)
+
 # ═══════════════════════════════════════════════════════════════
 # erasecure_core  —  static library containing all modules
 # ═══════════════════════════════════════════════════════════════
@@ -85,6 +87,46 @@ add_library(erasecure_core STATIC
 
     src/audit/audit.c
     src/audit/audit_log.c
+
+    src/ata/ata_identify.c
+    src/ata/ata_passthrough.c
+    src/ata/ata_sanitize.c
+
+    src/nvme/nvme_identify.c
+    src/nvme/nvme_passthrough.c
+    src/nvme/nvme_sanitize.c
+
+    src/file_eraser/file_eraser.c
+    src/file_eraser/file_verify.c
+    src/file_eraser/folder_eraser.c
+    src/file_eraser/metadata_eraser.c
+
+    src/recovery/block_state.c
+    src/recovery/blockmap.c
+    src/recovery/blockvector.c
+    src/recovery/carve_state.c
+    src/recovery/checkpoint.c
+    src/recovery/discovery.c
+    src/recovery/file_mirror.c
+    src/recovery/file_type_registry.c
+    src/recovery/promising_queue.c
+    src/recovery/reassembly.c
+    src/recovery/recovery_api.c
+    src/recovery/recovery_engine.c
+    src/recovery/recovery_output.c
+    src/recovery/validator.c
+    src/recovery/worker_pool.c
+
+    src/formats/all_formats.c
+    src/formats/elf_validator.c
+    src/formats/gif_validator.c
+    src/formats/jpeg_validator.c
+    src/formats/mp3_validator.c
+    src/formats/pdf_validator.c
+    src/formats/png_validator.c
+    src/formats/zip_validator.c
+
+    src/testing/test_image_gen.c
 )
 
 target_include_directories(erasecure_core PUBLIC
@@ -104,6 +146,7 @@ target_link_libraries(erasecure_core PUBLIC
     OpenSSL::Crypto
     ${SQLITE3_LIBRARIES}
     Threads::Threads
+    $<$<BOOL:${ZLIB_FOUND}>:ZLIB::ZLIB>
 )
 
 target_link_options(erasecure_core PUBLIC
@@ -158,6 +201,9 @@ erasecure_add_test(device_tests       tests/device_tests.c)
 erasecure_add_test(block_erase_tests  tests/block_erase_tests.c)
 erasecure_add_test(crypto_erase_tests tests/crypto_erase_tests.c)
 erasecure_add_test(verification_tests tests/verification_tests.c)
+erasecure_add_test(file_eraser_tests  tests/file_eraser_tests.c)
+erasecure_add_test(recovery_tests     tests/recovery_tests.c)
+erasecure_add_test(ata_nvme_tests     tests/ata_nvme_tests.c)
 
 # ═══════════════════════════════════════════════════════════════
 # Optional: GTK GUI (future)

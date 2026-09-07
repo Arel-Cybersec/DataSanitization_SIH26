@@ -1,4 +1,4 @@
-/**
+/** 
  * @file hash.h
  * @brief SHA-256 and SHA-512 hashing via OpenSSL EVP API.
  */

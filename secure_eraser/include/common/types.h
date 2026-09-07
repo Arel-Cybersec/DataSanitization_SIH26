@@ -38,4 +38,22 @@ typedef struct SanitizationResult   SanitizationResult;
 typedef struct VerificationResult   VerificationResult;
 typedef struct AuditRecord          AuditRecord;
 
+/* File eraser forward declarations */
+typedef struct FileEraseOptions     FileEraseOptions;
+typedef struct FileEraseResult      FileEraseResult;
+typedef struct FolderEraseOptions   FolderEraseOptions;
+typedef struct FolderEraseResult    FolderEraseResult;
+
+/* Recovery engine forward declarations */
+typedef struct FileMirror           FileMirror;
+typedef struct Blockmap             Blockmap;
+typedef struct BlockState           BlockState;
+typedef struct Blockvector          Blockvector;
+typedef struct CarveState           CarveState;
+typedef struct RecoveryCase         RecoveryCase;
+typedef struct RecoveryProgress     RecoveryProgress;
+typedef struct RecoveryResult       RecoveryResult;
+typedef struct CandidateInfo        CandidateInfo;
+typedef struct FileTypeDescriptor   FileTypeDescriptor;
+
 #endif /* ERASECURE_TYPES_H */

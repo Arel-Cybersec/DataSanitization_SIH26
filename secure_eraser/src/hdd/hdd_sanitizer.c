@@ -57,21 +57,20 @@ ErasecureError hdd_sanitize(const StorageDevice *device,
     switch (opts->method) {
         case SANITIZE_METHOD_BLOCK_ERASE:
             if (!opts->test_mode) {
-                /*
-                 * STUB: Real HDD block erase via direct fd write to /dev/sdX.
-                 * Requires:
-                 *   - O_RDWR | O_SYNC open on the block device
-                 *   - BLKGETSIZE64 ioctl to get size
-                 *   - write() loop with fsync()
-                 *   - Careful error handling (partial writes, EIO)
-                 *   - Root privileges
-                 * NOT IMPLEMENTED in this phase.
-                 */
-                result->result_code = ERASECURE_ERR_NOT_IMPLEMENTED;
-                snprintf(result->error_message, sizeof(result->error_message),
-                         "Real HDD block erase not implemented. "
-                         "Use --test-mode with an image file.");
-                return ERASECURE_ERR_NOT_IMPLEMENTED;
+                /* Real physical HDD block erase with explicit confirmation */
+                BlockEraseOptions be_opts = opts->block_erase;
+                be_opts.progress_cb = opts->progress_cb;
+                be_opts.user_data   = opts->user_data;
+
+                ErasecureError ret = block_erase_device(device, &be_opts,
+                                                        device->path,
+                                                        &result->block_result);
+                result->result_code = ret;
+                if (ret != ERASECURE_OK) {
+                    snprintf(result->error_message, sizeof(result->error_message),
+                             "%s", result->block_result.error_message);
+                }
+                return ret;
             }
             /* Test-image mode: delegate to block_erase_image */
             {

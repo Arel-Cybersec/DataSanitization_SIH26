@@ -84,4 +84,34 @@ const char *erase_pattern_str(ErasePattern pattern);
  */
 void block_erase_options_init(BlockEraseOptions *opts);
 
+/**
+ * @brief Fill a memory buffer with a specified ErasePattern.
+ *
+ * @param buf      Buffer to fill.
+ * @param len      Length of buffer in bytes.
+ * @param pattern  Pattern type (ZERO, ONE, RANDOM).
+ * @return         ERASECURE_OK on success.
+ */
+ErasecureError block_erase_fill_pattern(uint8_t *buf, size_t len, ErasePattern pattern);
+
+/**
+ * @brief Perform multi-pass block overwrite directly on a physical block device.
+ *
+ * Requires root privileges on Linux. Performs rigorous safety checks:
+ *   - Verifies device->path is a valid block device (S_ISBLK)
+ *   - Checks that device and any subpartitions are not mounted (ERASECURE_ERR_DEVICE_MOUNTED)
+ *   - Checks that device is not read-only
+ *   - Issues chunked writes with partial write recovery and fsync after each pass
+ *
+ * @param device       Physical storage device record.
+ * @param opts         Erase options.
+ * @param confirmation Explicit confirmation string (must match device->path).
+ * @param result       Output: erase result metrics.
+ * @return             ERASECURE_OK on success, error code otherwise.
+ */
+ErasecureError block_erase_device(const StorageDevice *device,
+                                 const BlockEraseOptions *opts,
+                                 const char *confirmation,
+                                 BlockEraseResult *result);
+
 #endif /* ERASECURE_BLOCK_ERASE_H */

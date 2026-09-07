@@ -44,6 +44,31 @@ static const ErrorEntry error_table[] = {
     { ERASECURE_ERR_DB_OPEN,           "Database open failed" },
     { ERASECURE_ERR_DB_EXEC,           "Database execution failed" },
     { ERASECURE_ERR_CHAIN_TAMPERED,    "Audit chain tamper detected" },
+    /* Physical device errors */
+    { ERASECURE_ERR_PERMISSION_DENIED, "Permission denied" },
+    { ERASECURE_ERR_DEVICE_BUSY,       "Device is busy" },
+    { ERASECURE_ERR_DEVICE_MOUNTED,    "Device has mounted filesystems" },
+    { ERASECURE_ERR_TIMEOUT,           "Operation timed out" },
+    { ERASECURE_ERR_CANCELLED,         "Operation cancelled" },
+    { ERASECURE_ERR_IDENTITY_CHANGED,  "Device identity changed since discovery" },
+    { ERASECURE_ERR_CONFIRMATION,      "Destructive operation not confirmed" },
+    { ERASECURE_ERR_IOCTL_FAILED,      "Ioctl call failed" },
+    /* File/folder eraser errors */
+    { ERASECURE_ERR_PATH_TRAVERSAL,    "Path traversal detected" },
+    { ERASECURE_ERR_SYMLINK_ATTACK,    "Symlink attack detected" },
+    { ERASECURE_ERR_DANGEROUS_PATH,    "Dangerous path rejected" },
+    { ERASECURE_ERR_DIR_NOT_EMPTY,     "Directory not empty after processing" },
+    { ERASECURE_ERR_CYCLE_DETECTED,    "Directory cycle detected" },
+    /* Recovery / forensic errors */
+    { ERASECURE_ERR_EVIDENCE_MISMATCH, "Evidence image mismatch" },
+    { ERASECURE_ERR_EVIDENCE_MODIFIED, "Evidence image was modified" },
+    { ERASECURE_ERR_CHECKPOINT_INVALID,"Checkpoint data is invalid" },
+    { ERASECURE_ERR_CHECKPOINT_VERSION,"Checkpoint format version mismatch" },
+    { ERASECURE_ERR_VALIDATION_FAILED, "File validation failed" },
+    { ERASECURE_ERR_QUEUE_FULL,        "Queue is full" },
+    { ERASECURE_ERR_QUEUE_EMPTY,       "Queue is empty" },
+    { ERASECURE_ERR_NOT_FOUND,         "Item not found" },
+    { ERASECURE_ERR_ALREADY_EXISTS,    "Item already exists" },
 };
 
 #define ERROR_TABLE_SIZE ((int)(sizeof(error_table) / sizeof(error_table[0])))

@@ -41,23 +41,44 @@ static bool is_partition(const char *name)
     size_t len = strlen(name);
     if (len == 0) return false;
 
-    /* If the name ends in one or more digits AND contains a 'p' before
-     * those digits (NVMe / MMC style), it's a partition. */
-    size_t i = len;
-    while (i > 0 && name[i - 1] >= '0' && name[i - 1] <= '9') {
-        --i;
-    }
-    if (i == len) return false;  /* no trailing digits → not a partition */
-
-    /* For SCSI/SATA disks (sda, sdb…) the partition has trailing digits
-     * directly after the device letter(s); e.g., sda1.
-     * For NVMe/MMC the separator is 'p': nvme0n1p1, mmcblk0p1. */
-    if (i > 0 && name[i - 1] == 'p') {
-        return true;   /* NVMe / MMC partition */
+    /* Loop devices and ram disks are not real storage devices */
+    if (strncmp(name, "loop", 4) == 0 || strncmp(name, "ram", 3) == 0) {
+        return true; /* filter them out */
     }
 
-    /* SCSI-style: trailing digit after non-digit characters */
-    return true;
+    /* Check NVMe namespace whole disk vs partition:
+     * Whole disk: nvme0n1, nvme1n1 (matches nvme\d+n\d+$)
+     * Partition:  nvme0n1p1, nvme0n1p2 (contains 'p' after 'n') */
+    if (strncmp(name, "nvme", 4) == 0) {
+        const char *n_pos = strchr(name + 4, 'n');
+        if (!n_pos) return false; /* unusual NVMe controller node */
+        const char *p_pos = strchr(n_pos + 1, 'p');
+        if (p_pos && *(p_pos + 1) >= '0' && *(p_pos + 1) <= '9') {
+            return true; /* nvmeXnYpZ is a partition */
+        }
+        return false; /* nvmeXnY is a whole disk */
+    }
+
+    /* Check MMC / SD card whole disk vs partition:
+     * Whole disk: mmcblk0, mmcblk1
+     * Partition:  mmcblk0p1, mmcblk0p2 */
+    if (strncmp(name, "mmcblk", 6) == 0) {
+        const char *p_pos = strchr(name + 6, 'p');
+        if (p_pos && *(p_pos + 1) >= '0' && *(p_pos + 1) <= '9') {
+            return true; /* mmcblkXpY is a partition */
+        }
+        return false; /* mmcblkX is a whole disk */
+    }
+
+    /* SCSI / SATA / VirtIO / IDE disks:
+     * Whole disk: sda, sdb, vda, hda (ends with non-digit)
+     * Partition:  sda1, sdb2, vda1 (ends with digit) */
+    char last = name[len - 1];
+    if (last >= '0' && last <= '9') {
+        return true; /* trailing digit on sd/hd/vd indicates a partition */
+    }
+
+    return false;
 }
 
 /* ─── Public API ─────────────────────────────────────────────── */
@@ -123,4 +144,53 @@ bool device_path_is_block_device(const char *path)
     }
 
     return false;
+}
+
+ErasecureError device_is_mounted(const char *device_path, bool *is_mounted)
+{
+    if (!device_path || !is_mounted) {
+        return ERASECURE_ERR_INVALID_ARG;
+    }
+
+    *is_mounted = false;
+
+    /* On non-Linux or systems without /proc/mounts, return OK with false */
+    FILE *f = fopen(ERASECURE_PROC_MOUNTS, "r");
+    if (!f) {
+        /* Fall back to checking /etc/mtab */
+        f = fopen("/etc/mtab", "r");
+        if (!f) {
+            return ERASECURE_OK;
+        }
+    }
+
+    char line[1024];
+    size_t dev_len = strlen(device_path);
+
+    while (fgets(line, sizeof(line), f)) {
+        /* Line format: <device> <mount_point> <fs_type> <options> <dump> <pass> */
+        char mnt_dev[512];
+        if (sscanf(line, "%511s", mnt_dev) != 1) {
+            continue;
+        }
+
+        /* Direct match on device path (e.g., /dev/sda) */
+        if (strcmp(mnt_dev, device_path) == 0) {
+            *is_mounted = true;
+            break;
+        }
+
+        /* Subpartition match: if device is /dev/sda, matches /dev/sda1, /dev/sda2...
+         * or if device is /dev/nvme0n1, matches /dev/nvme0n1p1 */
+        if (strncmp(mnt_dev, device_path, dev_len) == 0) {
+            char next = mnt_dev[dev_len];
+            if ((next >= '0' && next <= '9') || next == 'p') {
+                *is_mounted = true;
+                break;
+            }
+        }
+    }
+
+    fclose(f);
+    return ERASECURE_OK;
 }

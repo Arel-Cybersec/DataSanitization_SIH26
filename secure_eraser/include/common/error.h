@@ -53,6 +53,34 @@ typedef enum {
     ERASECURE_ERR_DB_OPEN           = -71,
     ERASECURE_ERR_DB_EXEC           = -72,
     ERASECURE_ERR_CHAIN_TAMPERED    = -73,
+
+    /* Physical device errors (Phases 2–6) */
+    ERASECURE_ERR_PERMISSION_DENIED = -80,
+    ERASECURE_ERR_DEVICE_BUSY       = -81,
+    ERASECURE_ERR_DEVICE_MOUNTED    = -82,
+    ERASECURE_ERR_TIMEOUT           = -83,
+    ERASECURE_ERR_CANCELLED         = -84,
+    ERASECURE_ERR_IDENTITY_CHANGED  = -85,  /* device identity mismatch */
+    ERASECURE_ERR_CONFIRMATION      = -86,  /* destructive op not confirmed */
+    ERASECURE_ERR_IOCTL_FAILED      = -87,
+
+    /* File/folder eraser errors (Phase 8) */
+    ERASECURE_ERR_PATH_TRAVERSAL    = -90,
+    ERASECURE_ERR_SYMLINK_ATTACK    = -91,
+    ERASECURE_ERR_DANGEROUS_PATH    = -92,
+    ERASECURE_ERR_DIR_NOT_EMPTY     = -93,
+    ERASECURE_ERR_CYCLE_DETECTED    = -94,
+
+    /* Recovery / forensic errors (Phases 9–27) */
+    ERASECURE_ERR_EVIDENCE_MISMATCH = -100,
+    ERASECURE_ERR_EVIDENCE_MODIFIED = -101,
+    ERASECURE_ERR_CHECKPOINT_INVALID = -102,
+    ERASECURE_ERR_CHECKPOINT_VERSION = -103,
+    ERASECURE_ERR_VALIDATION_FAILED = -104,
+    ERASECURE_ERR_QUEUE_FULL        = -105,
+    ERASECURE_ERR_QUEUE_EMPTY       = -106,
+    ERASECURE_ERR_NOT_FOUND         = -107,
+    ERASECURE_ERR_ALREADY_EXISTS    = -108,
 } ErasecureError;
 
 /**
@@ -73,8 +101,17 @@ void erasecure_log_error(const char *file, int line, const char *func,
 #define ERASECURE_LOG_ERR(err, msg) \
     erasecure_log_error(__FILE__, __LINE__, __func__, (err), (msg))
 
-/* Return-if-error helper */
-#define RETURN_IF_ERR(expr) \
-    do { ErasecureError _e = (expr); if (_e != ERASECURE_OK) return _e; } while (0)
+/* Compatibility aliases across modules */
+#define ERASECURE_SUCCESS               ERASECURE_OK
+#define ERASECURE_ERROR_INVALID_PARAM   ERASECURE_ERR_INVALID_ARG
+#define ERASECURE_ERROR_INVALID_ARGUMENT ERASECURE_ERR_INVALID_ARG
+#define ERASECURE_ERROR_MEMORY          ERASECURE_ERR_ALLOC
+#define ERASECURE_ERROR_NOT_FOUND       ERASECURE_ERR_NOT_FOUND
+#define ERASECURE_ERROR_INVALID_STATE   ERASECURE_ERR_INVALID_ARG
+#define ERASECURE_ERROR_IO              ERASECURE_ERR_IO
+#define ERASECURE_ERR_INVALID_ARGUMENT  ERASECURE_ERR_INVALID_ARG
+#define ERASECURE_ERR_NOT_SUPPORTED     ERASECURE_ERR_UNSUPPORTED
+#define ERASECURE_ERR_DEVICE_OPEN_FAILED ERASECURE_ERR_OPEN_FAILED
+#define ERASECURE_ERR_UNSUPPORTED_OS    ERASECURE_ERR_UNSUPPORTED
 
 #endif /* ERASECURE_ERROR_H */

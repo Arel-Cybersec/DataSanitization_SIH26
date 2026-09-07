@@ -8,6 +8,8 @@
 #include "device/device.h"
 #include "common/constants.h"
 #include "common/error.h"
+#include "ata/ata_sanitize.h"
+#include "nvme/nvme_sanitize.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -194,6 +196,12 @@ ErasecureError device_get_info(const char *path, StorageDevice *device)
     /* ── Classification ── */
     device_classify(dev_name, device);
 
+    /* Ensure device_id is populated */
+    if (device->device_id[0] == '\0') {
+        snprintf(device->device_id, sizeof(device->device_id),
+                 "dev-%s", dev_name);
+    }
+
     /* ── Default capabilities ── */
     device->capabilities.supports_block_erase = !device->is_read_only;
 
@@ -218,9 +226,56 @@ ErasecureError device_refresh_capabilities(StorageDevice *device)
 
     device->capabilities.supports_block_erase = !device->is_read_only;
 
-    /* Crypto erase and device-native: require further ioctl work (future) */
-    device->capabilities.supports_crypto_erase  = false;
-    device->capabilities.supports_device_native  = false;
+#ifdef __linux__
+    if (device->transport_type == TRANSPORT_SATA ||
+        device->device_type == DEVICE_TYPE_HDD ||
+        device->device_type == DEVICE_TYPE_SATA_SSD) {
+        AtaSanitizeCapabilities ata_caps;
+        if (ata_sanitize_query(device->path, &ata_caps) == ERASECURE_OK) {
+            device->capabilities.ata_secure_erase_supported = ata_caps.can_security_erase;
+            device->capabilities.ata_enhanced_erase_supported = ata_caps.can_enhanced_erase;
+            device->capabilities.supports_device_native =
+                ata_caps.can_security_erase ||
+                ata_caps.can_sanitize_block_erase ||
+                ata_caps.can_sanitize_overwrite;
+            device->capabilities.supports_crypto_erase = ata_caps.can_sanitize_crypto;
+            device->capabilities.is_self_encrypting = ata_caps.can_sanitize_crypto;
+            if (ata_caps.can_sanitize_crypto) {
+                device->encryption_status = ENCRYPTION_STATUS_ENCRYPTED;
+            }
+        }
+    } else if (device->transport_type == TRANSPORT_NVME ||
+               device->device_type == DEVICE_TYPE_NVME_SSD) {
+        NvmeSanitizeCapabilities nvme_caps;
+        if (nvme_sanitize_query(device->path, &nvme_caps) == ERASECURE_OK) {
+            device->capabilities.nvme_sanitize_supported =
+                nvme_caps.can_sanitize_block ||
+                nvme_caps.can_sanitize_overwrite ||
+                nvme_caps.can_sanitize_crypto;
+            device->capabilities.nvme_format_supported = nvme_caps.can_format_nvm;
+            device->capabilities.supports_device_native =
+                device->capabilities.nvme_sanitize_supported ||
+                nvme_caps.can_format_nvm;
+            device->capabilities.supports_crypto_erase =
+                nvme_caps.can_format_crypto_erase ||
+                nvme_caps.can_sanitize_crypto;
+            device->capabilities.is_self_encrypting = device->capabilities.supports_crypto_erase;
+            if (device->capabilities.supports_crypto_erase) {
+                device->encryption_status = ENCRYPTION_STATUS_ENCRYPTED;
+            }
+        }
+    }
+#else
+    device->capabilities.supports_crypto_erase = false;
+    device->capabilities.supports_device_native = false;
+#endif
 
+    return ERASECURE_OK;
+}
+
+ErasecureError device_get_capabilities(const StorageDevice *device, DeviceCapabilities *caps)
+{
+    if (!device || !caps) return ERASECURE_ERR_INVALID_ARG;
+    *caps = device->capabilities;
     return ERASECURE_OK;
 }

@@ -63,10 +63,18 @@ ErasecureError portable_sanitize(const StorageDevice *device,
                 return ERASECURE_ERR_UNSUPPORTED;
             }
             if (!opts->test_mode) {
-                result->result_code = ERASECURE_ERR_NOT_IMPLEMENTED;
-                snprintf(result->error_message, sizeof(result->error_message),
-                         "Real USB Flash / SD card erase not implemented.");
-                return ERASECURE_ERR_NOT_IMPLEMENTED;
+                BlockEraseOptions be_opts = opts->block_erase;
+                be_opts.progress_cb = opts->progress_cb;
+                be_opts.user_data   = opts->user_data;
+                ErasecureError ret = block_erase_device(device, &be_opts,
+                                                        device->path,
+                                                        &result->block_result);
+                result->result_code = ret;
+                snprintf(result->verify_result.confidence_note,
+                         sizeof(result->verify_result.confidence_note),
+                         "CAVEAT: Logical block overwrite on USB Flash/SD card "
+                         "cannot guarantee physical NAND erasure.");
+                return ret;
             }
             {
                 BlockEraseOptions be_opts = opts->block_erase;

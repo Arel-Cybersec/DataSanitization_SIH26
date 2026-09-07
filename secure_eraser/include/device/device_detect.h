@@ -38,4 +38,16 @@ ErasecureError device_scan(StorageDevice *devices, size_t max_devices,
  */
 bool device_path_is_block_device(const char *path);
 
+/**
+ * @brief Check whether a storage device or any of its partitions are mounted.
+ *
+ * Inspects /proc/mounts to determine if the device path or any subpartition
+ * (e.g. /dev/sda1 for /dev/sda) is currently mounted by the OS.
+ *
+ * @param device_path  Path to device (e.g. "/dev/sda").
+ * @param is_mounted   Output: set to true if mounted, false otherwise.
+ * @return             ERASECURE_OK on success, error code otherwise.
+ */
+ErasecureError device_is_mounted(const char *device_path, bool *is_mounted);
+
 #endif /* ERASECURE_DEVICE_DETECT_H */

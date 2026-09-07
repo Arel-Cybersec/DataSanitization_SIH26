@@ -133,7 +133,7 @@ ErasecureError audit_log_validate_chain(const char *log_path,
         }
 
         /* Verify: previous_record_hash stored in record should match
-         * the hash we computed for the prior record */
+         * the hash of the prior record */
         if (record_count > 1) {
             if (strcmp(stored_prev, prev_computed) != 0) {
                 chain_ok = false;
@@ -141,17 +141,11 @@ ErasecureError audit_log_validate_chain(const char *log_path,
             }
         }
 
-        /* Re-compute hash of this line (the canonical data).
-         * We hash everything in the line up to (but not including)
-         * the this_record_hash field, combined with the line's
-         * previous_record_hash. This mimics what audit_record_finalize does. */
-        uint8_t digest[ERASECURE_SHA256_DIGEST_LEN];
-        ErasecureError err = hash_sha256_buffer(
-            (const uint8_t *)line, line_len, digest);
-        if (err != ERASECURE_OK) { chain_ok = false; break; }
-
-        char recomputed[ERASECURE_SHA256_HEX_LEN];
-        hash_digest_to_hex(digest, ERASECURE_SHA256_DIGEST_LEN, recomputed);
+        /* Verify that stored_hash is a valid non-empty 64-character hex digest */
+        if (strlen(stored_hash) != ERASECURE_SHA256_HEX_LEN - 1) {
+            chain_ok = false;
+            break;
+        }
 
         /* For chain continuity: track what hash each record produced */
         snprintf(prev_computed, sizeof(prev_computed), "%s", stored_hash);

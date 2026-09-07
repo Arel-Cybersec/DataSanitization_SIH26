@@ -42,4 +42,13 @@ ErasecureError device_refresh_capabilities(StorageDevice *device);
  */
 void device_classify(const char *dev_name, StorageDevice *device);
 
+/**
+ * @brief Query capabilities for a device.
+ *
+ * @param device  Device to inspect.
+ * @param caps    Output capabilities struct.
+ * @return        ERASECURE_OK on success.
+ */
+ErasecureError device_get_capabilities(const StorageDevice *device, DeviceCapabilities *caps);
+
 #endif /* ERASECURE_DEVICE_INFO_H */

@@ -62,4 +62,36 @@
 #define SYSFS_RO_FMT                 "/sys/block/%s/ro"
 #define SYSFS_SUBSYSTEM_FMT          "/sys/block/%s/device/subsystem"
 
+/* ─── Mount detection ────────────────────────────────────────── */
+#define ERASECURE_PROC_MOUNTS        "/proc/mounts"
+
+/* ─── File/folder eraser ─────────────────────────────────────── */
+#define ERASECURE_MAX_ERASE_DEPTH    128U     /* max recursion depth */
+#define ERASECURE_DANGEROUS_PATHS                                       \
+    "/", "/boot", "/etc", "/usr", "/bin", "/sbin", "/lib",              \
+    "/lib64", "/proc", "/sys", "/dev", "/run", "/var", NULL
+
+/* ─── Recovery / carving engine ──────────────────────────────── */
+#define ERASECURE_DEFAULT_CARVE_BLOCK_SIZE  512U
+#define ERASECURE_MAX_SIGNATURES            256U
+#define ERASECURE_MAX_FILE_TYPES            64U
+#define ERASECURE_MAX_CANDIDATES            4096U
+#define ERASECURE_CONFIDENCE_MIN            0U
+#define ERASECURE_CONFIDENCE_MAX            100U
+#define ERASECURE_UUID_LEN                  37U
+
+/* ─── Worker pool ────────────────────────────────────────────── */
+#define ERASECURE_DEFAULT_WORKER_COUNT      4U
+#define ERASECURE_MAX_WORKER_COUNT          32U
+
+/* ─── Checkpointing ──────────────────────────────────────────── */
+#define ERASECURE_CHECKPOINT_MAGIC          0x45435043U  /* "ECPC" */
+#define ERASECURE_CHECKPOINT_VERSION        1U
+#define ERASECURE_CHECKPOINT_INTERVAL_SEC   30U
+
+/* ─── Recovery output dirs ───────────────────────────────────── */
+#define ERASECURE_OUTPUT_VALIDATED    "VALIDATED"
+#define ERASECURE_OUTPUT_PROMISING    "PROMISING"
+#define ERASECURE_OUTPUT_INPROGRESS   "INPROGRESS"
+
 #endif /* ERASECURE_CONSTANTS_H */
