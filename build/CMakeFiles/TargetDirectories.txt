@@ -1,0 +1,10 @@
+/home/kali/Desktop/DataSanitization_SIH26-master/secure_eraser/build/CMakeFiles/erasecure_core.dir
+/home/kali/Desktop/DataSanitization_SIH26-master/secure_eraser/build/CMakeFiles/erasecure_cli.dir
+/home/kali/Desktop/DataSanitization_SIH26-master/secure_eraser/build/CMakeFiles/device_tests.dir
+/home/kali/Desktop/DataSanitization_SIH26-master/secure_eraser/build/CMakeFiles/block_erase_tests.dir
+/home/kali/Desktop/DataSanitization_SIH26-master/secure_eraser/build/CMakeFiles/crypto_erase_tests.dir
+/home/kali/Desktop/DataSanitization_SIH26-master/secure_eraser/build/CMakeFiles/file_eraser_tests.dir
+/home/kali/Desktop/DataSanitization_SIH26-master/secure_eraser/build/CMakeFiles/ata_nvme_tests.dir
+/home/kali/Desktop/DataSanitization_SIH26-master/secure_eraser/build/CMakeFiles/test.dir
+/home/kali/Desktop/DataSanitization_SIH26-master/secure_eraser/build/CMakeFiles/edit_cache.dir
+/home/kali/Desktop/DataSanitization_SIH26-master/secure_eraser/build/CMakeFiles/rebuild_cache.dir
