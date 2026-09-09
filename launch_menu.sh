@@ -1,19 +1,33 @@
-#!/bin/bash
-
+#!/usr/bin/env bash
 # EraseCure Interactive TUI Launcher for SIH Demo
-# Ensures a foolproof, zero-error live demonstration for judges.
+# Sanitized against NBSP (\xC2\xA0) corruption, path drift, and silent exit-code swallowing.
 
-BINARY="./build/bin/erasecure"
+# Enforce strict POSIX error handling and pipe failures
+set -euo pipefail
+
+# Resolve script directory dynamically to prevent context drift
+SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+BINARY="${SCRIPT_DIR}/build/bin/erasecure"
+
+# Automated Sandbox Fallback: Ensure test images exist relative to project root if missing
+ensure_sandbox() {
+    local target="$1"
+    if [ ! -f "$target" ]; then
+        echo "[*] Sandbox target '$target' missing. Generating mock test image via dd..."
+        dd if=/dev/zero of="$target" bs=1M count=10 status=none
+        echo "[+] Successfully created sandbox target: $target"
+    fi
+}
 
 if [ ! -f "$BINARY" ]; then
-    echo "[-] Error: erasecure binary not found at $BINARY. Please run cmake/make first."
+    echo "[-] Error: erasecure binary not found at $BINARY. Please run cmake/make first." >&2
     exit 1
 fi
 
 while true; do
     clear
     echo "╔══════════════════════════════════════════════════╗"
-    echo "║     EraseCure v0.1.0-dev — SIH Live Demo TUI     ║"
+    echo "║      EraseCure v0.1.0-dev — SIH Live Demo TUI      ║"
     echo "╚══════════════════════════════════════════════════╝"
     echo ""
     echo "  1) List Detected Devices / Status"
@@ -28,33 +42,43 @@ while true; do
         1)
             echo ""
             echo "[*] Enumerating devices..."
-            $BINARY --list-devices
+            if ! "$BINARY" --list-devices; then
+                echo "[-] Error: Device enumeration failed." >&2
+            fi
             echo ""
             read -p "Press Enter to return to menu..."
             ;;
         2)
             echo ""
-            read -p "Enter target image path (default: ../zero_test.img): " img_path
-            img_path=${img_path:-../zero_test.img}
+            read -p "Enter target image path (default: ./zero_test.img): " img_path
+            img_path=${img_path:-./zero_test.img}
             read -p "Enter number of passes (default: 1): " passes
             passes=${passes:-1}
             
+            ensure_sandbox "$img_path"
+
             echo ""
             echo "[*] Executing zero wipe on $img_path..."
-            $BINARY --test-image "$img_path" --block-erase zero --passes "$passes" --verify
+            if ! "$BINARY" --test-image "$img_path" --block-erase zero --passes "$passes" --verify; then
+                echo "[-] Error: Zero-fill wipe execution failed or returned non-zero exit code." >&2
+            fi
             echo ""
             read -p "Press Enter to return to menu..."
             ;;
         3)
             echo ""
-            read -p "Enter target image path (default: ../multi_test.img): " img_path
-            img_path=${img_path:-../multi_test.img}
+            read -p "Enter target image path (default: ./multi_test.img): " img_path
+            img_path=${img_path:-./multi_test.img}
             read -p "Enter number of passes (default: 3): " passes
             passes=${passes:-3}
             
+            ensure_sandbox "$img_path"
+
             echo ""
             echo "[*] Executing multi-pass random secure wipe with full verify..."
-            $BINARY --test-image "$img_path" --block-erase random --passes "$passes" --verify-full
+            if ! "$BINARY" --test-image "$img_path" --block-erase random --passes "$passes" --verify-full; then
+                echo "[-] Error: Multi-pass secure wipe failed or encountered verification errors." >&2
+            fi
             echo ""
             read -p "Press Enter to return to menu..."
             ;;
