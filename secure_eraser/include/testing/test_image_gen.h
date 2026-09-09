@@ -5,6 +5,9 @@
 #include <stddef.h>
 #include "common/error.h"
 
+void get_absolute_path(const char *prog_path, const char *target_filename, char *out_path, size_t max_len);
+void ensure_sandbox_target(const char *filepath);
+
 typedef enum {
     FRAG_PATTERN_CONTIGUOUS       = 0,  /* Files placed contiguously */
     FRAG_PATTERN_GAP              = 1,  /* Gaps of zero blocks between fragments */
