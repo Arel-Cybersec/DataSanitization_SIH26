@@ -4,6 +4,11 @@
 #include <stdio.h>
 #include <openssl/sha.h>
 #include <openssl/crypto.h>
+#include <sys/stat.h>
+#include <libgen.h>
+#include <unistd.h>
+
+#define DEFAULT_TEST_IMG "zero_test.img"
 
 ErasecureError test_image_gen_init(SyntheticEvidenceImage *img, const char *path, uint64_t block_size, uint64_t total_blocks) {
     if (!img || !path || block_size == 0 || total_blocks == 0) return ERR_INVALID_PARAM;
@@ -26,6 +31,38 @@ ErasecureError test_image_gen_init(SyntheticEvidenceImage *img, const char *path
     }
 
     return ERR_SUCCESS;
+}
+
+void get_absolute_path(const char *prog_path, const char *target_filename, char *out_path, size_t max_len) {
+    char temp_path[1024];
+    snprintf(temp_path, sizeof(temp_path), "%s", prog_path);
+    char *dir = dirname(temp_path);
+    
+    // Construct path relative to binary directory
+    snprintf(out_path, max_len, "%s/%s", dir, target_filename);
+    
+    // Fallback check if file exists
+    struct stat st;
+    if (stat(out_path, &st) != 0) {
+        // Fallback to current working directory or generate sandbox
+        snprintf(out_path, max_len, "./%s", target_filename);
+    }
+}
+
+void ensure_sandbox_target(const char *filepath) {
+    struct stat st;
+    if (stat(filepath, &st) != 0) {
+        fprintf(stdout, "[*] Test target '%s' missing. Generating automated sandbox image...\n", filepath);
+        char cmd[512];
+        // Generate a 10MB mock test image using dd
+        snprintf(cmd, sizeof(cmd), "dd if=/dev/zero of=\"%s\" bs=1M count=10 status=none", filepath);
+        int ret = system(cmd);
+        if (ret != 0) {
+            fprintf(stderr, "[!] Warning: Failed to automatically create sandbox target via dd.\n");
+        } else {
+            fprintf(stdout, "[+] Successfully generated sandbox target: %s\n", filepath);
+        }
+    }
 }
 
 void test_image_gen_destroy(SyntheticEvidenceImage *img) {
